@@ -1,0 +1,19 @@
+{
+  "name": "'",
+  "version": "0.0.1",
+  "description": "Analyzes selected objects lifecycle to help detect memory leaks and understand gc behavior.",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "weakmap",
+    "memory",
+    "leak",
+    "memory",
+    "profiler",
+    "gc"
+  ],
+  "author": "Mario Marinero <mariomarinero@gmail.com>",
+  "license": "MIT"
+}

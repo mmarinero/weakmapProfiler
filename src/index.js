@@ -1,34 +1,63 @@
 module.exports = function(){
 
-	var DefaultReporter = function(logger){
+	var DefaultReporter = function(logger, interval){
 		this.logger = logger;
 	}
 
 	DefaultReporter.prototype = {
-		init: function(){
-
+		destroy : function(){
+			clearInterval(this.intervalId);
 		}
 	}
 
 	var WeakMapProfiler = function(options){
 		options = options || [];
-		this.map = new WeakMap();
-		this.metaMap = new Map();
+		this.references = new WeakMap();
+		this.records = new Map();
+		this.profiles = new Map();
 		this.logger = options.logger || console.log.bind(console);
-		this.reporter = options.reporter || new WeakMapProfiler.DefaultReporter(logger);
-		this.reporter.init();
+		if (options.reporter) {
+			this.report = options.reporter.bind(this);
+		}
+		this.interval = options.interval !== undefined ? options.interval : 100
+		setInterval(function() {
+			var profile = new Map();
+			this.records.forEach(function(valueRecords, key) {
+				profile.set(key, {
+					timestamp: performance.now(),
+					live: this.references.has(key)
+				});
+			})
+			this.profiles.set(performance.now(), profile);
+		}, this.interval);
 	}
 
 	WeakMapProfiler.prototype = {
-		log: function(key, value) {
-			var valueRecords = this.metaMap.has(key) ? this.metaMap.get(key) : [];
+		add: function(key, value) {
+			var valueRecords = this.records.has(key) ? this.records.get(key) : [];
 			var record = {
 				timestamp: performance.now(),
-				alreadyLive: this.map.has(key)
+				alreadyLive: this.references.has(key)
 			};
 			valueRecords.push(record)
-			this.metaMap.set(key, valueRecords);
-			this.map.set(key, value);
+			this.records.set(key, valueRecords);
+			this.references.set(key, value);
+		},
+
+		report: function(options){
+			this.logger('Profile report at: ' + performance.now());
+			if (options.valueHistory) {
+				this.records.forEach(function(valueRecords, key){
+					this.logger('key: ' + key.toString() + ' profile store history');
+					if (options.valueHistory === 'full') {
+						this.logger(valueRecords.toString());
+					}
+					this.logger('Stored now: ' + this.references.has(key));
+				});
+			}
+			this.records.forEach(function(valueRecords, key){
+
+			});
 		}
 	}
 

@@ -23,10 +23,7 @@ module.exports = function(){
 		setInterval(function() {
 			var profile = new Map();
 			this.records.forEach(function(valueRecords, key) {
-				profile.set(key, {
-					timestamp: performance.now(),
-					live: this.references.has(key)
-				});
+				profile.set(key,  this.references.has(key));
 			})
 			this.profiles.set(performance.now(), profile);
 		}, this.interval);
@@ -44,7 +41,11 @@ module.exports = function(){
 			this.references.set(key, value);
 		},
 
-		report: function(options){
+		clearProfiles: function() {
+			this.profiles.clear();
+		},
+
+		report: function(options) {
 			this.logger('Profile report at: ' + performance.now());
 			if (options.valueHistory) {
 				this.records.forEach(function(valueRecords, key){
@@ -55,9 +56,27 @@ module.exports = function(){
 					this.logger('Stored now: ' + this.references.has(key));
 				});
 			}
-			this.records.forEach(function(valueRecords, key){
-
-			});
+			if (options.profile === undefined || options.profile){
+				options.sample = options.sample || 1;
+				var index = 0;
+				this.profiles.forEach(function(profile, time){
+					if ( index++ % options.sample !== 0 ) {
+						return; //Skip profiles when sampling
+					}
+					this.logger('State at: ' + time);
+					this.profile.foreach(function() {
+						var live = 0;
+						this.records.keys().forEach(function(key){
+							if (options.profile === 'full'){
+								var state = profile.has(key) ? 'live' : 'dead';
+								this.logger('key: ' + key + 'was ' + state);
+								liveReferences += 1;
+							}
+						});
+						this.logger('live/total: ' + live /  this.profile.size());
+					});
+				});
+			}
 		}
 	}
 
